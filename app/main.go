@@ -33,12 +33,23 @@ func main() {
 		case "type":
 			err = typeCommand(args)
 			if err != nil {
-				log.Fatal("{type} command error: ", err)
+				fmt.Printf("{type} command error: %v\n", err)
 			}
 		case "exit":
 			os.Exit(0)
 		default:
-			fmt.Println(command + ": command not found")
+			_, err := exec.LookPath(command)
+			if err != nil {
+				fmt.Printf("%v: command not found\n", command)
+			} else {
+				cmd := exec.Command(command, args...)
+				cmd.Stdout = os.Stdout
+				cmd.Stderr = os.Stderr
+				if err = cmd.Run(); err != nil {
+					fmt.Printf("command failed: %v\n", err)
+				}
+			}
+
 		}
 
 	}
