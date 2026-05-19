@@ -11,10 +11,12 @@ import (
 )
 
 func main() {
+	reader := bufio.NewReader(os.Stdin)
+
 	for {
 		fmt.Print("$ ")
 
-		input, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		input, err := reader.ReadString('\n')
 		if err != nil {
 			log.Fatal("input error:", err)
 		}
@@ -35,9 +37,18 @@ func main() {
 			if err != nil {
 				fmt.Printf("{type} command error: %v\n", err)
 			}
+		case "pwd":
+			path, err := os.Getwd()
+			if err != nil {
+				fmt.Printf("pwd command error: %v\n", err)
+				continue
+			}
+			fmt.Println(path)
+
 		case "exit":
 			os.Exit(0)
 		default:
+			// поиск внешней команды
 			_, err := exec.LookPath(command)
 			if err != nil {
 				fmt.Printf("%v: command not found\n", command)
@@ -45,14 +56,12 @@ func main() {
 				cmd := exec.Command(command, args...)
 				cmd.Stdout = os.Stdout
 				cmd.Stderr = os.Stderr
-				if err = cmd.Run(); err != nil {
-					fmt.Printf("command failed: %v\n", err)
-				}
+				cmd.Run()
 			}
-
 		}
 
 	}
+
 }
 
 func typeCommand(args []string) error {
@@ -60,6 +69,7 @@ func typeCommand(args []string) error {
 		"echo": nil,
 		"exit": nil,
 		"type": nil,
+		"pwd":  nil,
 	}
 
 	for _, arg := range args {
