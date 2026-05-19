@@ -8,23 +8,28 @@ import (
 	"strings"
 )
 
-// bufio.Reader has peek() method that
 func main() {
-	// REPL
 	for {
 		fmt.Print("$ ")
 
-		command, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		input, err := bufio.NewReader(os.Stdin).ReadString('\n')
 		if err != nil {
 			log.Fatal("input error:", err)
 		}
 
-		command = strings.TrimSpace(command)
+		args := strings.Split(strings.TrimSpace(input), " ")
+		command := args[0]
+		args = args[1:]
 
-		if command == "exit" {
-			break
+		switch command {
+
+		case "echo":
+			fmt.Println(strings.Join(args, " "))
+		case "exit":
+			os.Exit(0)
+		default:
+			fmt.Println(command + ": command not found")
 		}
 
-		fmt.Println(command + ": command not found")
 	}
 }
