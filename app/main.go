@@ -2,9 +2,11 @@ package main
 
 import (
 	"bufio"
+	"errors"
 	"fmt"
 	"log"
 	"os"
+	"os/exec"
 	"strings"
 )
 
@@ -18,6 +20,10 @@ func main() {
 		}
 
 		args := strings.Fields(input)
+		if len(args) == 0 {
+			continue
+		}
+
 		command := args[0]
 		args = args[1:]
 
@@ -25,7 +31,10 @@ func main() {
 		case "echo":
 			fmt.Println(strings.Join(args, " "))
 		case "type":
-			typeCommand(args)
+			err = typeCommand(args)
+			if err != nil {
+				log.Fatal("{type} command error: ", err)
+			}
 		case "exit":
 			os.Exit(0)
 		default:
@@ -35,18 +44,29 @@ func main() {
 	}
 }
 
-func typeCommand(args []string) {
+func typeCommand(args []string) error {
 	builtinCommands := map[string]interface{}{
 		"echo": nil,
 		"exit": nil,
 		"type": nil,
 	}
+
 	for _, arg := range args {
-		trimmed := strings.TrimSpace(arg)
-		if _, ok := builtinCommands[trimmed]; !ok {
-			fmt.Printf("%v: not found\n", arg)
+		if _, ok := builtinCommands[arg]; ok {
+			fmt.Printf("%v is a shell builtin\n", arg)
 			continue
+		} else {
+			path, err := exec.LookPath(arg)
+			if errors.Is(err, exec.ErrDot) {
+				err = nil
+			}
+			if err != nil {
+				fmt.Printf("%v: not found\n", arg)
+				continue
+			}
+			fmt.Printf("%v is %v\n", arg, path)
 		}
-		fmt.Printf("%v is a shell builtin\n", arg)
+
 	}
+	return nil
 }
