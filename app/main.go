@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 // bufio.Reader has peek() method that
@@ -17,6 +18,13 @@ func main() {
 		if err != nil {
 			log.Fatal("input error:", err)
 		}
-		fmt.Println(command[:len(command)-1] + ": command not found")
+
+		command = strings.TrimSpace(command)
+
+		if command == "exit" {
+			break
+		}
+
+		fmt.Println(command + ": command not found")
 	}
 }
