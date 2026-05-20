@@ -44,19 +44,28 @@ func main() {
 				continue
 			}
 			fmt.Println(path)
+		case "cd":
+			if len(args) == 1 {
+				err = os.Chdir(args[0])
+				if err != nil {
+					dir := strings.Split(args[0], "\\")
+					fmt.Printf("cd: %v: No such file or directory\n", dir[len(dir)-1])
+				}
+			}
 
+			if len(args) > 1 {
+				fmt.Println("cd: too many arguments")
+			}
 		case "exit":
 			os.Exit(0)
 		default:
-			// поиск внешней команды
-			_, err := exec.LookPath(command)
+			cmd := exec.Command(command, args...)
+			cmd.Stdout = os.Stdout
+			cmd.Stderr = os.Stderr
+			err = cmd.Run()
 			if err != nil {
 				fmt.Printf("%v: command not found\n", command)
-			} else {
-				cmd := exec.Command(command, args...)
-				cmd.Stdout = os.Stdout
-				cmd.Stderr = os.Stderr
-				cmd.Run()
+
 			}
 		}
 
@@ -70,6 +79,7 @@ func typeCommand(args []string) error {
 		"exit": nil,
 		"type": nil,
 		"pwd":  nil,
+		"cd":   nil,
 	}
 
 	for _, arg := range args {
