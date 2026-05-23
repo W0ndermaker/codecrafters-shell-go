@@ -27,14 +27,6 @@ func main() {
 
 		command, args := splitInput[0], splitInput[1:]
 
-		//_, args, _ := commands.ArgParser(input, reader)
-		// if err != nil {
-		// 	if errors.Is(err, commands.QuotesNumberdErr) {
-		// 		fmt.Println("> ")
-		// 		addInput := reader.ReadString()
-		// 	}
-		// }
-
 		err = commands.CommandHandler(command, args)
 		if err != nil {
 			if errors.Is(err, commands.ExitCommandErr) {
