@@ -6,8 +6,9 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
-	"strings"
+
+	"github.com/codecrafters-io/shell-starter-go/app/commands"
+	"github.com/google/shlex"
 )
 
 func main() {
@@ -17,92 +18,30 @@ func main() {
 		fmt.Print("$ ")
 
 		input, err := reader.ReadString('\n')
+
 		if err != nil {
 			log.Fatal("input error:", err)
 		}
 
-		args := strings.Fields(input)
-		if len(args) == 0 {
-			continue
+		splitInput, _ := shlex.Split(input)
+
+		command, args := splitInput[0], splitInput[1:]
+
+		//_, args, _ := commands.ArgParser(input, reader)
+		// if err != nil {
+		// 	if errors.Is(err, commands.QuotesNumberdErr) {
+		// 		fmt.Println("> ")
+		// 		addInput := reader.ReadString()
+		// 	}
+		// }
+
+		err = commands.CommandHandler(command, args)
+		if err != nil {
+			if errors.Is(err, commands.ExitCommandErr) {
+				os.Exit(0)
+			}
+			fmt.Println(err)
 		}
-
-		command := args[0]
-		args = args[1:]
-
-		switch command {
-		case "echo":
-			fmt.Println(strings.Join(args, " "))
-		case "type":
-			err = typeCommand(args)
-			if err != nil {
-				fmt.Printf("{type} command error: %v\n", err)
-			}
-		case "pwd":
-			path, err := os.Getwd()
-			if err != nil {
-				fmt.Printf("pwd command error: %v\n", err)
-				continue
-			}
-			fmt.Println(path)
-		case "cd":
-			if len(args) == 1 {
-				path := args[0]
-				if args[0] == "~" {
-					path = os.Getenv("HOME")
-				}
-
-				err = os.Chdir(path)
-				if err != nil {
-					dir := strings.Split(path, "\\")
-					fmt.Printf("cd: %v: No such file or directory\n", dir[len(dir)-1])
-				}
-			}
-
-			if len(args) > 1 {
-				fmt.Println("cd: too many arguments")
-			}
-		case "exit":
-			os.Exit(0)
-		default:
-			cmd := exec.Command(command, args...)
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
-			err = cmd.Run()
-			if err != nil {
-				fmt.Printf("%v: command not found\n", command)
-
-			}
-		}
-
 	}
 
-}
-
-func typeCommand(args []string) error {
-	builtinCommands := map[string]interface{}{
-		"echo": nil,
-		"exit": nil,
-		"type": nil,
-		"pwd":  nil,
-		"cd":   nil,
-	}
-
-	for _, arg := range args {
-		if _, ok := builtinCommands[arg]; ok {
-			fmt.Printf("%v is a shell builtin\n", arg)
-			continue
-		} else {
-			path, err := exec.LookPath(arg)
-			if errors.Is(err, exec.ErrDot) {
-				err = nil
-			}
-			if err != nil {
-				fmt.Printf("%v: not found\n", arg)
-				continue
-			}
-			fmt.Printf("%v is %v\n", arg, path)
-		}
-
-	}
-	return nil
 }
